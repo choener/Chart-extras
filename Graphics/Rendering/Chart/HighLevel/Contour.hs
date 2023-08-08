@@ -7,7 +7,7 @@
 module Graphics.Rendering.Chart.HighLevel.Contour where
 
 import Algorithms.Geometry.DelaunayTriangulation.Types (Triangulation, edgesAsPoints, toPlaneGraph)
-import Control.Lens (view, (&), (.~), makeLenses)
+import Control.Lens (view, (&), (.~), makeLenses, _3)
 import Control.Monad (foldM)
 import Data.Ext (core, (:+) (..))
 import Data.Geometry (Point (..))
@@ -83,30 +83,29 @@ instance Default (PlotDelaunayContours p x y) where
 -- TODO each of the contours has limits @[lower,upper)@, a title, and fill style. Collect the points
 -- based on the given contours, and render. All points not within the given contours are rendered
 -- using the default style, if set.
---
--- BUG I need to triangulate first, then sort the polygons, otherwise I get artifacts.
 
 plotDelaunayContours :: (Real x, Real y, Fractional x, Fractional y, Ord p) => PlotDelaunayContours p x y -> Plot x y
 plotDelaunayContours p = foldl1' joinPlot (remplot:dstplots)
   where
     remplot = toPlot $ def
-      & plot_polygons_title .~ _plot_delaunaycontours_title p
-      & plot_polygons_polygons .~ map (\xs -> [ (x,y) | (x,y,_) <- xs] ) (genTriangles remainder)
+      & plot_polygons_title .~ _plot_delaunaycontours_title p ++ "Contours:"
+      & plot_polygons_polygons .~ map (\xs -> [ (x,y) | (x,y,_) <- xs]) remainder
       & plot_polygons_fill .~ maybe (solidFillStyle transparent) id (_plot_delaunaycontours_fill p)
       & plot_polygons_line .~ _plot_delaunaycontours_line p
     dstplots = [ toPlot $ def & plot_polygons_title .~ title
                               & plot_polygons_fill .~ style
-                              & plot_polygons_polygons .~ map (\xs -> [ (x,y) | (x,y,_) <- xs] ) (genTriangles ps)
-               | (low,high,title,style,ps) <- dst ]
-    (dst,remainder) = go (_plot_delaunaycontours_contours p) (_plot_delaunaycontours_points p) []
+                              & plot_polygons_polygons .~ map (\ps -> [(x,y) | (x,y,_) <- ps]) tri
+               | (low,high,title,style,tri) <- dst ]
+    (dst,remainder) = go (_plot_delaunaycontours_contours p) [] tris
     -- Repeatedly partition the set of points, until no more contours are available, then return
     -- the individual contours, and the remainder to draw via the default function. This has a
     -- worst case running time of @p*c@ where @p@ is the the number of points, and @c@ the number
     -- of contours.
-    go [] remainder dst = (dst, remainder)
-    go ((low,high,title,style):contours) ps dst =
-      let (yes,no) = partition (\(_,_,p) -> low <= p && p < high) ps
-      in  go contours no ((low,high,title,style,yes):dst)
+    go [] dst ts = (dst, ts)
+    go ((low,high,title,style):contours) dst ts =
+      let (yes,no) = partition (\ps -> let p = minimum (map (view _3) ps) in low <= p && p < high) ts
+      in  go contours ((low,high,title,style,yes):dst) no
+    tris = genTriangles $ _plot_delaunaycontours_points p
 
 --  toPlot p = Graphics.Rendering.Chart.Plot
 --    { _plot_render = renderSimplePolygons p
