@@ -1,0 +1,90 @@
+Cabal-version:  2.2
+Name:           Chart-extras
+Version:        0.0.0.1
+License:        BSD-3-Clause
+License-file:   LICENSE
+Author:         Christian Hoener zu Siederdissen
+Maintainer:     choener@gmail.com
+Copyright:      Christian Hoener zu Siederdissen, 2023
+homepage:       https://github.com/choener/Chart-extras
+bug-reports:    https://github.com/choener/Chart-extras/issues
+Stability:      Experimental
+Category:       Data
+Build-type:     Simple
+tested-with:    GHC == 9.2.7
+Synopsis:       .
+Description:
+                .
+
+
+
+extra-source-files:
+  changelog.md
+  README.md
+
+
+
+common deps
+  build-depends: base                     >= 4.7      &&  < 5.0
+               , Chart
+               , containers
+               , colour
+               , data-default
+               , data-default-class
+               , ghc-prim
+               , hgeometry
+               , hgeometry-combinatorial
+               , lens
+               , log-domain
+               , mwc-random
+               , vector                   >= 0.10
+               , vector-th-unbox          >= 0.2
+               , vinyl
+  ghc-options:
+    -O2
+    -funbox-strict-fields
+  default-language:
+    Haskell2010
+  default-extensions: BangPatterns
+                    , ConstraintKinds
+                    , DataKinds
+                    , DeriveFunctor
+                    , DeriveGeneric
+                    , DerivingStrategies
+                    , FlexibleContexts
+                    , FlexibleInstances
+                    , GADTs
+                    , GeneralizedNewtypeDeriving
+                    , LambdaCase
+                    , MultiParamTypeClasses
+                    , MultiWayIf
+                    , NumericUnderscores
+                    , OverloadedLabels
+                    , PolyKinds
+                    , RankNTypes
+                    , ScopedTypeVariables
+                    , StandaloneKindSignatures
+                    , TemplateHaskell
+                    , TupleSections
+                    , TypeApplications
+                    , TypeFamilies
+                    , TypeInType
+                    , TypeOperators
+                    , UndecidableInstances
+                    , ViewPatterns
+
+
+
+library
+  import:
+    deps
+  exposed-modules:
+    Graphics.Rendering.Chart.Plot.SimplePolygons
+    Graphics.Rendering.Chart.Plot.WeightedHistogram
+
+
+
+source-repository head
+  type: git
+  location: git://github.com/choener/Chart-extras
+
