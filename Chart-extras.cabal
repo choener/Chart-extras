@@ -81,6 +81,7 @@ library
   exposed-modules:
     Graphics.Rendering.Chart.Plot.SimplePolygons
     Graphics.Rendering.Chart.Plot.WeightedHistogram
+    Graphics.Rendering.Chart.HighLevel.Contour
 
 
 
