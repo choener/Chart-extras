@@ -32,7 +32,7 @@ instance Default (PlotStep x y) where
 
 instance ToPlot PlotStep where
   toPlot p = Plot
-    { _plot_render = undefined -- renderPlotStep p
+    { _plot_render = renderPlotStep p
     , _plot_legend = [(_plot_step_title p, renderPlotLegendStep p)]
     , _plot_all_points = plotAllPointsStep p
     }
@@ -70,69 +70,19 @@ plotAllPointsStep = unzip . _plot_step_values
 -- TODO need to generate points first, so that "double"'s are available; however will this map
 -- correctly in log-scale? I leave this for now to ponder.
 
-renderPlotStep :: Fractional x => PlotStep x y -> PointMapFn x y -> BackendProgram ()
-renderPlotStep p pmap =
+renderPlotStep :: PlotStep x y -> PointMapFn x y -> BackendProgram ()
+renderPlotStep p pmap = do
   unless (null ps) . withLineStyle (_plot_step_style p) $ do
-    drawLines (mapXY pmap) $ go undefined ps
+    alignStrokePoints (go (let Point px py = head ps in Point (px-0.5) py) ps) >>= strokePointPath
+  unless (null ps) $ case _plot_step_point_style p of
+    Just sty -> mapM_ (drawPoint sty) ps
+    Nothing -> pure ()
   where
-    go (px,py) [] = [(px+0.5,py)]
-    go (px,py) ((hx,hy):next)
-      = ((px+hx)/2,py)
-      : ((px+hx)/2,hy)
-      : (hx,hy)
-      : go (hx,hy) next
-    ps = _plot_step_values p
-    drawLines mapfn pts = alignStrokePoints (map mapfn pts) >>= strokePointPath
+    go (Point px py) [] = [Point (px+0.5) py]
+    go (Point px py) (Point hx hy : next)
+      = (Point ((px+hx)/2) py)
+      : (Point ((px+hx)/2) hy)
+      : (Point hx        hy)
+      : go (Point hx hy) next
+    ps = map (mapXY pmap) $ _plot_step_values p
 
-{-
-instance ToPlot PlotLines where
-    toPlot p = Plot {
-        _plot_render     = renderPlotLines p,
-        _plot_legend     = [(_plot_lines_title p, renderPlotLegendLines p)],
-        _plot_all_points = ( map fst pts ++ xs, map snd pts ++ ys )
-    }
-      where
-        pts = concat (_plot_lines_values p)
-        xs = [ x | (LValue x,_) <- concat (_plot_lines_limit_values p)]
-        ys = [ y | (_,LValue y) <- concat (_plot_lines_limit_values p)]
-
-renderPlotLines :: PlotLines x y -> PointMapFn x y -> BackendProgram ()
-renderPlotLines p pmap = 
-  withLineStyle (_plot_lines_style p) $ do
-    mapM_ (drawLines (mapXY pmap)) (_plot_lines_values p)
-    mapM_ (drawLines pmap) (_plot_lines_limit_values p)
-  where
-    drawLines mapfn pts = alignStrokePoints (map mapfn pts) >>= strokePointPath 
-
-
-defaultPlotLineStyle :: LineStyle
-defaultPlotLineStyle = (solidLine 1 $ opaque blue){
-     _line_cap  = LineCapRound,
-     _line_join = LineJoinRound
- }
-
-instance Default (PlotLines x y) where
-  def = PlotLines 
-    { _plot_lines_title        = ""
-    , _plot_lines_style        = defaultPlotLineStyle
-    , _plot_lines_values       = []
-    , _plot_lines_limit_values = []
-    }
-
--- | Helper function to plot a single horizontal line.
-hlinePlot :: String -> LineStyle -> b -> Plot a b
-hlinePlot t ls v = toPlot def {
-    _plot_lines_title        = t,
-    _plot_lines_style        = ls,
-    _plot_lines_limit_values = [[(LMin, LValue v),(LMax, LValue v)]]
-    }
-
--- | Helper function to plot a single vertical line.
-vlinePlot :: String -> LineStyle -> a -> Plot a b
-vlinePlot t ls v = toPlot def {
-    _plot_lines_title        = t,
-    _plot_lines_style        = ls,
-    _plot_lines_limit_values = [[(LValue v,LMin),(LValue v,LMax)]]
-    }
-
--}
