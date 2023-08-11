@@ -8,6 +8,7 @@ import Graphics.Rendering.Chart
 import Data.Default.Class (Default(..))
 import Data.Colour (opaque)
 import Data.Colour.Names (blue, black)
+import Control.Monad (unless)
 
 
 -- |
@@ -31,9 +32,9 @@ instance Default (PlotStep x y) where
 
 instance ToPlot PlotStep where
   toPlot p = Plot
-    { _plot_render = undefined
+    { _plot_render = undefined -- renderPlotStep p
     , _plot_legend = [(_plot_step_title p, renderPlotLegendStep p)]
-    , _plot_all_points = undefined
+    , _plot_all_points = plotAllPointsStep p
     }
 
 renderPlotLegendStep :: PlotStep x y -> Rect -> BackendProgram ()
@@ -55,6 +56,33 @@ defaultPlotStepStyle = (solidLine 1 $ opaque black)
   { _line_cap  = LineCapRound
   , _line_join = LineJoinRound
   }
+
+plotAllPointsStep :: PlotStep x y -> ([x],[y])
+plotAllPointsStep = unzip . _plot_step_values
+
+-- |
+--
+-- .x.v   v.x.
+--    ^.x.^
+--
+-- TODO Include an optimization that removes consecutive points with same y-axis position.
+--
+-- TODO need to generate points first, so that "double"'s are available; however will this map
+-- correctly in log-scale? I leave this for now to ponder.
+
+renderPlotStep :: Fractional x => PlotStep x y -> PointMapFn x y -> BackendProgram ()
+renderPlotStep p pmap =
+  unless (null ps) . withLineStyle (_plot_step_style p) $ do
+    drawLines (mapXY pmap) $ go undefined ps
+  where
+    go (px,py) [] = [(px+0.5,py)]
+    go (px,py) ((hx,hy):next)
+      = ((px+hx)/2,py)
+      : ((px+hx)/2,hy)
+      : (hx,hy)
+      : go (hx,hy) next
+    ps = _plot_step_values p
+    drawLines mapfn pts = alignStrokePoints (map mapfn pts) >>= strokePointPath
 
 {-
 instance ToPlot PlotLines where
