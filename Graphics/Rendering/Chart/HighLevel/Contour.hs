@@ -83,6 +83,9 @@ instance Default (PlotDelaunayContours p x y) where
 -- TODO each of the contours has limits @[lower,upper)@, a title, and fill style. Collect the points
 -- based on the given contours, and render. All points not within the given contours are rendered
 -- using the default style, if set.
+--
+-- TODO Modify the caption of the resulting Plot to show a very compressed view, instead of
+-- individual legends. Should be possible by overriding the legend part.
 
 plotDelaunayContours :: (Real x, Real y, Fractional x, Fractional y, Ord p) => PlotDelaunayContours p x y -> Plot x y
 plotDelaunayContours p = foldl1' joinPlot (remplot:dstplots)
