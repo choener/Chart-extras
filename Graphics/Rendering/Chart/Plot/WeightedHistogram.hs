@@ -177,7 +177,9 @@ histToBins hist =
           values = V.fromList (_plot_hist_values hist)
           filter_zeros | _plot_hist_no_zeros hist  = filter (\(_,c)->c > 0)
                        | otherwise                 = id
-          norm = dx * realToFrac (V.length values)
+          -- BUG fairly certain I need to sum the weights, not just take the length
+          -- norm = dx * realToFrac (V.length values)
+          norm = dx * realToFrac (V.sum $ V.map snd values)
           normalize :: Double -> y
           normalize = _plot_hist_norm_func hist norm
           counts :: [y]
