@@ -32,8 +32,8 @@ common deps
                , data-default
                , data-default-class
                , ghc-prim
-               , hgeometry
-               , hgeometry-combinatorial
+               -- , hgeometry
+               -- , hgeometry-combinatorial
                , lens
                , log-domain
                , mwc-random
@@ -82,7 +82,7 @@ library
     Graphics.Rendering.Chart.Plot.SimplePolygons
     Graphics.Rendering.Chart.Plot.WeightedHistogram
     Graphics.Rendering.Chart.Plot.Step
-    Graphics.Rendering.Chart.HighLevel.Contour
+    --Graphics.Rendering.Chart.HighLevel.Contour
 
 
 
