@@ -169,7 +169,7 @@ renderPlotLegendHist p (Rect p1 p2) =
 
 histToBins :: forall x y . (RealFrac x, Num y, Ord y) => WeightedHist x y -> [((x,x), y)]
 histToBins hist =
-    filter_zeros $ zip bounds $ counts
+    filter_zeros $ zip bounds counts
     where n = _plot_hist_bins hist
           (a,b) = realHistRange hist
           dx = realToFrac (b-a) / realToFrac n
